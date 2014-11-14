@@ -1,0 +1,147 @@
+#include "WPILib.h"
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <nivision.h>
+#include "Relay.h"
+
+/**
+ * This is a demo program showing the use of the RobotBase class.
+ * The SimpleRobot class is the base of a robot application that will automatically call your
+ * Autonomous and OperatorControl methods at the right time as controlled by the switches on
+ * the driver station or the field controls.
+ */ 
+class RobotDemo : public SimpleRobot
+{
+	RobotDrive myRobot; // robot drive system
+	Joystick stick; // only joystick
+	Relay backpack;
+public:
+	RobotDemo():
+		myRobot(1, 2),	// these must be initialized in the same order
+		stick(1),		// as they are declared above.
+		backpack(1, Relay::kBothDirections)
+	{
+		myRobot.SetExpiration(0.1);
+	}
+
+	/**
+	 * Drive left & right motors for 2 seconds then stop
+	 */
+	void Autonomous()
+	{		
+	}
+
+	/**
+	 * Runs the motors with arcade steering. 
+	 */
+	void OperatorControl()
+	{
+		AxisCamera &camera = AxisCamera::GetInstance("10.28.53.11");	//Establishes connection to Camera
+		camera.WriteResolution(AxisCamera::kResolution_320x240);
+		DriverStationLCD *screen = DriverStationLCD::GetInstance();
+		int counter = 0;
+		while (IsOperatorControl())
+		{
+			counter++;
+			backpack.Set(Relay::kForward); //turn ring light on
+
+			HSLImage* imgpointer; //Declares an image container as an HSL image
+			imgpointer = camera.GetImage();	//Tells camera to get an image
+			screen->PrintfLine(DriverStationLCD::kUser_Line1,"width: %d",  imgpointer->GetWidth());
+			screen->PrintfLine(DriverStationLCD::kUser_Line2,"height: %d",  imgpointer->GetHeight());
+			BinaryImage* binIMG = NULL;	//Declares a container to hold a binary image
+			binIMG = imgpointer -> ThresholdHSL(0, 255, 0, 255, 235, 255);	//Thresholds HSL image and places in the binary image container
+			delete imgpointer;	//Deletes the HSL Image to clear up room on the cRIO
+			//static int IVA_ParticleFilter (Image* Kirby, int pParameter[], float pLower[], float pUpper[], int pCalibrated[], int pExclude[], int criteriaCount, int rejectMatches, int connectivity);
+			Image* Kirby = imaqCreateImage(IMAQ_IMAGE_U8, 0); //create 8 bit image
+			//int pParameter();
+			float pLower = 0; //min height of "fake" rectangle for comparison ?
+			float pUpper = 300;	//max heigh of "fake" rectangle for comparison ?
+			//int pCalibrated();
+			//int pExclude;
+			int criteriaCount = 1; //arb
+			int rejectMatches = 1;	//arb
+			int connectivity = 1;	//arb
+			int Polturgust3000;	//removes small blobs
+			int borderSetting;	//variable to store border settings, limit for rectangle
+			int borderSize = 1;  //Border for the camera frame
+			{
+				//int success = 1;
+				ParticleFilterCriteria2 particleCriteria;	
+				
+				ParticleFilterOptions particleFilterOptions;
+				int numParticles;
+				
+				particleCriteria.parameter = IMAQ_MT_AREA;
+				particleCriteria.lower = pLower;
+				particleCriteria.upper = pUpper;
+				particleCriteria.calibrated = FALSE;
+				particleCriteria.exclude = FALSE;
+					
+				particleFilterOptions.rejectMatches = rejectMatches;
+				particleFilterOptions.rejectBorder = 0;
+				particleFilterOptions.connectivity8 = connectivity;
+				
+				Polturgust3000 = imaqParticleFilter3(Kirby, binIMG -> GetImaqImage(), &particleCriteria, criteriaCount, &particleFilterOptions, NULL, &numParticles);
+				borderSetting = imaqSetBorderSize(Kirby, borderSize);
+				delete binIMG;		
+			}
+			int ParticleCounter;	//stores number of particles
+			int* countparticles;
+			//int PicInfo;
+			//unsigned int visionInfo;
+
+			//int paralysis;
+			//pointer = static_cast<int *>(paralysis);	//int to pointer
+			ParticleCounter = imaqCountParticles(Kirby, TRUE, countparticles);
+			screen->PrintfLine(DriverStationLCD::kUser_Line6,"NumOfParticles",countparticles);
+			//PicInfo = imaqGetVisionInfoTypes(Kirby, &visionInfo);
+			/**
+			if (*pointer > 0 && *pointer < 3)
+			{
+				TinyRuler = imaqMeasureParticle(Kirby, 1, FALSE, IMAQ_MT_BOUNDING_RECT_WIDTH, unowidth);
+				BabyYardstick = imaqMeasureParticle(Kirby, 2, FALSE, IMAQ_MT_BOUNDING_RECT_WIDTH, doswidth);
+				screen->PrintfLine(DriverStationLCD::kUser_Line3,"W1: %lf",unowidth);
+				screen->PrintfLine(DriverStationLCD::kUser_Line4,"W2: %lf",doswidth);
+				screen->UpdateLCD();
+			}
+			else
+			{
+				screen->PrintfLine(DriverStationLCD::kUser_Line3,"Too Much");
+				screen->PrintfLine(DriverStationLCD::kUser_Line4,"Too Much");
+				screen->UpdateLCD();
+			}
+			int *realWorld;
+			realWorld = TransformReport* imaqTransformPixelToRealWorld(const Image* image, const PointFloat* pixelCoordinates, int numCoordinates); 
+			
+			*/
+			
+
+			int TinyRuler;
+			int BabyYardstick;
+			double *thingOne;
+			double *thingTwo;
+			TinyRuler = imaqMeasureParticle(Kirby, 1, FALSE, IMAQ_MT_BOUNDING_RECT_WIDTH, thingOne);
+			BabyYardstick = imaqMeasureParticle(Kirby, 2, FALSE, IMAQ_MT_BOUNDING_RECT_WIDTH, thingTwo);
+							
+			screen->PrintfLine(DriverStationLCD::kUser_Line3,"W1: %lf",unowidth);
+			screen->PrintfLine(DriverStationLCD::kUser_Line4,"W2: %lf",doswidth);
+			screen->UpdateLCD();
+			
+			screen->PrintfLine(DriverStationLCD::kUser_Line5,"%d", imaqGetLastError());
+			screen->UpdateLCD();
+		}
+	}
+	
+	/**
+	 * Runs during test mode
+	 */
+	void Test() {
+
+	}
+};
+
+START_ROBOT_CLASS(RobotDemo);
+
+

@@ -1,0 +1,33 @@
+#include "WPILib.h"
+#include "Math.h"
+class RobotDemo : public SimpleRobot
+{
+	Joystick joyStick;
+	Joystick joyStickTwo;
+	Talon topLeft, topRight;
+	Talon bottomLeft, bottomRight;
+public:
+	RobotDemo():
+		joyStick(1),
+		joyStickTwo(2),
+		topLeft(1), topRight(2), bottomLeft(3), bottomRight(4)
+	{
+	}
+	void Autonomous()
+	{
+		
+	}
+	void OperatorControl()
+	{
+		while (IsOperatorControl())
+		{
+			
+		}
+	}
+	void Test() {
+
+	}
+};
+
+START_ROBOT_CLASS(RobotDemo);
+
