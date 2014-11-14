@@ -1,0 +1,6 @@
+DFW status and trace log : Fri Apr 04 16:15:21 2014
+
+16:15:21.685 ERROR: no id specified
+  SevError(2) : programcontext.cpp : 5450
+16:15:21.699 ERROR: target definition defaultTarget has not been created
+  Protocol Component : SevError(2) : targetdefinitionmanager.cpp : 5122
